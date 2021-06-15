@@ -62,7 +62,7 @@ func main() {
 		failOnError("delete image error: ", err)
 
 		uatDeploymentName := getDeploymentName(newImage)
-		log.Println("start updating uat k8s deployment", uatDeploymentName)
+		log.Println("start updating uat k8s deployment ", uatDeploymentName)
 		err = updateDeployment(newDeployment(uatDeploymentName, newImage))
 		failOnError("update uat k8s deployment error: ", err)
 	}
