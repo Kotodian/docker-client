@@ -7,14 +7,6 @@ import (
 
 var dockerClient *docker.Client
 
-func init() {
-	var err error
-	dockerClient, err = docker.NewClient(*unixSock)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func images() ([]docker.APIImages, error) {
 	return dockerClient.ListImages(docker.ListImagesOptions{
 		All:     true,
@@ -45,4 +37,8 @@ func pushImage(imageTag string) error {
 		Name: nameTag[0],
 		Tag:  nameTag[1],
 	}, docker.AuthConfiguration{})
+}
+
+func deleteImage(imageTag string) error {
+	return dockerClient.RemoveImage(imageTag)
 }
