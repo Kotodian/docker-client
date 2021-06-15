@@ -23,47 +23,47 @@ func init() {
 	flag.Parse()
 	var err error
 	dockerClient, err = docker.NewClient(*unixSock)
-	failOnError(err)
+	failOnError("failed to connect docker daemon error: ", err)
 	devConfig, err := clientcmd.BuildConfigFromFlags("", *kubeConfig)
-	failOnError(err)
+	failOnError("failed to build dev kube config error: ", err)
 	devKubeClient, err = kubernetes.NewForConfig(devConfig)
-	failOnError(err)
+	failOnError("failed to connect dev k8s master error: ", err)
 
 	if *uat {
 		uatConfig, err := clientcmd.BuildConfigFromFlags("", *uatKubeConfig)
-		failOnError(err)
+		failOnError("failed to build uat kube config error: ", err)
 		uatKubeClient, err = kubernetes.NewForConfig(uatConfig)
-		failOnError(err)
+		failOnError("failed to connect uat k8s master error: ", err)
 	}
 }
 
 func main() {
 	log.Println("start pulling image ", *imageTag)
 	err := pullImage(*imageTag)
-	failOnError(err)
+	failOnError("pull image error", err)
 
 	devDeploymentName := getDeploymentName(*imageTag)
 	log.Println("start updating dev k8s deployment ", devDeploymentName)
 	err = updateDeployment(newDeployment(devDeploymentName, *imageTag))
-	failOnError(err)
+	failOnError("update dev k8s deployment error: ", err)
 
 	if *uat {
 		newImage := strings.ReplaceAll(*imageTag, "beta", "rc")
-		log.Printf("start taging image %s to a new image %s\n", *imageTag, newImage)
+		log.Printf("start tagging image %s to a new image %s\n", *imageTag, newImage)
 		err = tagImage(*imageTag, strings.Split(newImage, ":")[1])
-		failOnError(err)
+		failOnError("tagging image error: ", err)
 
 		log.Printf("start pushing image %s\n", newImage)
 		err = pushImage(newImage)
-		failOnError(err)
+		failOnError("push image error: ", err)
 
 		log.Printf("start deleting image %s\n", newImage)
 		err = deleteImage(newImage)
-		failOnError(err)
+		failOnError("delete image error: ", err)
 
 		uatDeploymentName := getDeploymentName(newImage)
 		log.Println("start updating uat k8s deployment", uatDeploymentName)
 		err = updateDeployment(newDeployment(uatDeploymentName, newImage))
-		failOnError(err)
+		failOnError("update uat k8s deployment error: ", err)
 	}
 }

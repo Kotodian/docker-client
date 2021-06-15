@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"path"
 	"strings"
 )
@@ -11,8 +12,8 @@ func getDeploymentName(imageTag string) string {
 	return deployment
 }
 
-func failOnError(err error) {
+func failOnError(message string, err error) {
 	if err != nil {
-		panic(err)
+		panic(errors.New(message + err.Error()))
 	}
 }
