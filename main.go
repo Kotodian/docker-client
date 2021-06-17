@@ -13,7 +13,6 @@ import (
 
 var (
 	imageTag      = flag.String("image", "", "image:tag")
-	unixSock      = flag.String("sock", "unix://var/run/docker.sock", "docker sock")
 	uat           = flag.Bool("uat", false, "need to deploy in uat")
 	kubeConfig    = flag.String("kube_conf", filepath.Join(homedir.HomeDir(), ".kube", "config"), "kube config")
 	uatKubeConfig = flag.String("uat_kube_conf", filepath.Join(homedir.HomeDir(), "uat", "config"), "uat kube config")
@@ -22,8 +21,10 @@ var (
 func init() {
 	flag.Parse()
 	var err error
-	dockerClient, err = docker.NewClient(*unixSock)
+	dockerClient, err = docker.NewClientFromEnv()
 	failOnError("failed to connect docker daemon error: ", err)
+	auth, err = docker.NewAuthConfigurationsFromDockerCfg()
+	failOnError("failed to get config from dockerCfg error: ", err)
 	devConfig, err := clientcmd.BuildConfigFromFlags("", *kubeConfig)
 	failOnError("failed to build dev kube config error: ", err)
 	devKubeClient, err = kubernetes.NewForConfig(devConfig)
@@ -38,13 +39,13 @@ func init() {
 }
 
 func main() {
-	log.Println("start pulling image ", *imageTag)
-	err := pullImage(*imageTag)
-	failOnError("pull image error", err)
+	//log.Println("start pulling image ", *imageTag)
+	//err := pullImage(*imageTag)
+	//failOnError("pull image error", err)
 
 	devDeploymentName := getDeploymentName(*imageTag)
 	log.Println("start updating dev k8s deployment ", devDeploymentName)
-	err = updateDeployment(newDeployment(devDeploymentName, *imageTag))
+	err := updateDeployment(newDeployment(devDeploymentName, *imageTag))
 	failOnError("update dev k8s deployment error: ", err)
 
 	if *uat {

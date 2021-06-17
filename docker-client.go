@@ -6,6 +6,9 @@ import (
 )
 
 var dockerClient *docker.Client
+var auth *docker.AuthConfigurations
+
+const registry = "registry.cn-hangzhou.aliyuncs.com"
 
 func images() ([]docker.APIImages, error) {
 	return dockerClient.ListImages(docker.ListImagesOptions{
@@ -15,6 +18,10 @@ func images() ([]docker.APIImages, error) {
 	})
 }
 
+func login(username, password string) error {
+	return nil
+}
+
 func pullImage(imageTag string) error {
 	repositoryTag := strings.Split(imageTag, ":")
 	repository, tag := repositoryTag[0], repositoryTag[1]
@@ -22,7 +29,7 @@ func pullImage(imageTag string) error {
 		All:        false,
 		Repository: repository,
 		Tag:        tag,
-	}, docker.AuthConfiguration{})
+	}, auth.Configs[registry])
 }
 
 func tagImage(imageTag string, newTag string) error {
@@ -36,7 +43,7 @@ func pushImage(imageTag string) error {
 	return dockerClient.PushImage(docker.PushImageOptions{
 		Name: nameTag[0],
 		Tag:  nameTag[1],
-	}, docker.AuthConfiguration{})
+	}, auth.Configs[registry])
 }
 
 func deleteImage(imageTag string) error {
