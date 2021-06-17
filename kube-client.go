@@ -52,12 +52,18 @@ func updateDeployment(deploy *deployment) error {
 	// deepcopy a new one
 	newDeployment := oldDeployment.DeepCopy()
 	// update the deployment
-	newDeployment.Spec.Template.Spec.Containers[0].Image = deploy.image
-	_, err = client.AppsV1().Deployments("default").Update(
-		context.Background(),
-		newDeployment, metav1.UpdateOptions{})
-	if err != nil {
-		return err
+	oldImage := newDeployment.Spec.Template.Spec.Containers[0].Image
+	if oldImage != deploy.image {
+		if !strings.Contains(oldImage, deploy.name) {
+			return errors.New("this image doesn't belong to this deployment")
+		}
+		newDeployment.Spec.Template.Spec.Containers[0].Image = deploy.image
+		_, err = client.AppsV1().Deployments("default").Update(
+			context.Background(),
+			newDeployment, metav1.UpdateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
